@@ -38,12 +38,12 @@ jobs:
         with:
           push: true
           tags: |
-            platane/snk:${{ github.sha }}
-            platane/snk:${{ github.event.inputs.version }}
+            alaricweb/snk:${{ github.sha }}
+            alaricweb/snk:${{ github.event.inputs.version }}
 
       - name: update action.yml to point to the newly created docker image
         run: |
-          sed -i "s/image: .*/image: docker:\/\/platane\/snk@${{ steps.docker-build.outputs.digest }}/" action.yml
+          sed -i "s/image: .*/image: docker:\/\/alaricweb\/snk@${{ steps.docker-build.outputs.digest }}/" action.yml
 
       - uses: actions/setup-node@v3
         with:
@@ -65,7 +65,7 @@ jobs:
         run: |
           VERSION=${{ github.event.inputs.version }}
 
-          git config --global user.email "bot@platane.me"
+          git config --global user.email "bot@alaricweb.me"
           git config --global user.name "release bot"
           git add package.json svg-only/dist action.yml
           git commit -m "📦 $VERSION"
