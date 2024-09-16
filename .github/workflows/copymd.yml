@@ -1,0 +1,60 @@
+name: Copy MD Files from All Repos
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    
+
+jobs:
+  copy-md-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'actions@github.com'
+
+      - name: Fetch all repositories
+        run: |
+          # Get all repositories (change `my-username` to your GitHub username or organization)
+          repos=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" \
+            https://api.github.com/user/repos?per_page=100 | jq -r '.[].full_name')
+          
+          echo "$repos" > repos.txt
+
+      - name: Copy MD files from all repos
+        run: |
+          while IFS= read -r repo; do
+            echo "Processing repository: $repo"
+
+            # Create a directory for the repo
+            mkdir -p "repos/$(echo $repo | sed 's/\//_/g')"
+
+            # Clone the repo
+            git clone https://github.com/$repo.git temp-repo
+            cd temp-repo
+
+            # Find and copy .md files
+            find . -name "*.md" -exec bash -c '
+              for file; do
+                # Get the file hash
+                hash=$(git hash-object "$file")
+                # Copy the file to the main repo with a new name
+                cp "$file" "../../repos/$(echo $repo | sed 's/\//_/g')/${hash}.md"
+              done
+            ' bash {} +
+
+            # Clean up
+            cd ..
+            rm -rf temp-repo
+          done < repos.txt
+
+      - name: Commit and push changes
+        run: |
+          git add repos/
+          git commit -m "Add .md files from all repositories"
+          git push
