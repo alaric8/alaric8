@@ -37,8 +37,8 @@ jobs:
             repo_dir="repos/$repo_name"
             mkdir -p "$repo_dir"
 
-            # Clone the repo
-            git clone https://github.com/$repo.git temp-repo
+            # Clone the repo using access token
+            git clone https://${{ secrets.REPO_ACCESS_TOKEN }}@github.com/$repo.git temp-repo
             cd temp-repo
 
             # Find and copy .md files
