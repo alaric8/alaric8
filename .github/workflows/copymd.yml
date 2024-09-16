@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: Checkout current repository
         uses: actions/checkout@v3
+        id: checkout
 
       - name: Set up Git
         run: |
@@ -23,6 +24,10 @@ jobs:
           # Get all repositories for the authenticated user
           repos=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" \
             https://api.github.com/user/repos?per_page=100 | jq -r '.[].full_name')
+
+          # Exclude the current repository
+          current_repo="${{ github.repository }}"
+          repos=$(echo "$repos" | grep -v "^$current_repo$")
 
           echo "$repos" > repos.txt
 
