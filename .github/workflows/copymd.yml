@@ -2,9 +2,9 @@ name: Copy MD Files from All Repos
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
-    
 
 jobs:
   copy-md-files:
@@ -20,19 +20,21 @@ jobs:
 
       - name: Fetch all repositories
         run: |
-          # Get all repositories (change `my-username` to your GitHub username or organization)
+          # Get all repositories for the authenticated user
           repos=$(curl -s -H "Authorization: token ${{ secrets.REPO_ACCESS_TOKEN }}" \
             https://api.github.com/user/repos?per_page=100 | jq -r '.[].full_name')
-          
+
           echo "$repos" > repos.txt
 
       - name: Copy MD files from all repos
         run: |
+          mkdir -p repos
           while IFS= read -r repo; do
             echo "Processing repository: $repo"
 
             # Create a directory for the repo
-            mkdir -p "repos/$(echo $repo | sed 's/\//_/g')"
+            repo_name=$(echo "$repo" | sed 's/\//_/g')
+            mkdir -p "repos/$repo_name"
 
             # Clone the repo
             git clone https://github.com/$repo.git temp-repo
@@ -41,10 +43,12 @@ jobs:
             # Find and copy .md files
             find . -name "*.md" -exec bash -c '
               for file; do
-                # Get the file hash
-                hash=$(git hash-object "$file")
-                # Copy the file to the main repo with a new name
-                cp "$file" "../../repos/$(echo $repo | sed 's/\//_/g')/${hash}.md"
+                if [ -f "$file" ]; then
+                  # Get the file hash
+                  hash=$(git hash-object "$file")
+                  # Copy the file to the main repo with a new name
+                  cp "$file" "../../repos/$repo_name/${hash}.md"
+                fi
               done
             ' bash {} +
 
