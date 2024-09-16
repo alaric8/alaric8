@@ -42,7 +42,7 @@ jobs:
             mkdir -p "$repo_dir"
 
             # Clone the repo using access token
-            git clone https://${{ secrets.REPO_ACCESS_TOKEN }}@github.com/$repo.git temp-repo
+            git clone https://x-access-token:${{ secrets.REPO_ACCESS_TOKEN }}@github.com/$repo.git temp-repo
             cd temp-repo
 
             # Find and copy .md files
@@ -51,8 +51,6 @@ jobs:
                 if [ -f "$file" ]; then
                   # Get the file hash
                   hash=$(git hash-object "$file")
-                  # Ensure the target directory exists
-                  mkdir -p "$(dirname "../../$repo_dir")"
                   # Copy the file to the main repo with a new name
                   cp "$file" "../../$repo_dir/${hash}.md"
                 fi
